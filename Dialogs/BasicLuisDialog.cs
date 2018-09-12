@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Linq;
 using System.Text;
@@ -117,12 +118,17 @@ namespace Microsoft.Bot.Sample.LuisBot
         public async Task WhosUpIntent(IDialogContext context, LuisResult result)
         {
             var date = ModelFactory.CreateModel<Date>(result);
+            Debug.WriteLine($"Got date: {date}");
             var dateRange = ModelFactory.CreateModel<DateRange>(result);
+            Debug.WriteLine($"Got date range: {dateRange}");
 
             var complete = BuildCompleteList();
+            Debug.WriteLine($"Built complete list {complete.Count}");
 
             if (date != null)
             {
+                Debug.WriteLine($"Handling date");
+
                 if (complete.ContainsKey(date.Value))
                 {
                     await context.PostAsync($"{complete[date.Value]} will be doing it that day.");
@@ -130,6 +136,8 @@ namespace Microsoft.Bot.Sample.LuisBot
             }
             else if (dateRange != null)
             {
+                Debug.WriteLine($"Handling range");
+
                 var victims = complete.Where(c => c.Key >= dateRange.Start && c.Key < dateRange.End);
                 var bob = new StringBuilder();
                 bob.AppendLine($"Here are you're volunteers for that time: ");
