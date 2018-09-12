@@ -118,16 +118,16 @@ namespace Microsoft.Bot.Sample.LuisBot
         public async Task WhosUpIntent(IDialogContext context, LuisResult result)
         {
             var date = ModelFactory.CreateModel<Date>(result);
-            Debug.WriteLine($"Got date: {date}");
+            await context.PostAsync($"Got date: {date}");
             var dateRange = ModelFactory.CreateModel<DateRange>(result);
-            Debug.WriteLine($"Got date range: {dateRange}");
+            await context.PostAsync($"Got date range: {dateRange}");
 
             var complete = BuildCompleteList();
-            Debug.WriteLine($"Built complete list {complete.Count}");
+            await context.PostAsync($"Built complete list {complete.Count}");
 
             if (date != null)
             {
-                Debug.WriteLine($"Handling date");
+                await context.PostAsync($"Handling date");
 
                 if (complete.ContainsKey(date.Value))
                 {
@@ -136,7 +136,7 @@ namespace Microsoft.Bot.Sample.LuisBot
             }
             else if (dateRange != null)
             {
-                Debug.WriteLine($"Handling range");
+                await context.PostAsync($"Handling range");
 
                 var victims = complete.Where(c => c.Key >= dateRange.Start && c.Key < dateRange.End);
                 var bob = new StringBuilder();
