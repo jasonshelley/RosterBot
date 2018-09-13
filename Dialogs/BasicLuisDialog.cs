@@ -178,7 +178,10 @@ namespace Microsoft.Bot.Sample.LuisBot
                 }
                 else
                 {
-                    await context.PostAsync(
+                    if (date.Value.DayOfWeek == DayOfWeek.Saturday || date.Value.DayOfWeek == DayOfWeek.Sunday)
+                        await context.PostAsync($"That's a weekend. There's no-one on.");
+                    else
+                        await context.PostAsync(
                         $"I'm sorry I haven't found anyone rostered on for that day ({date.Value: dddd yyyy-MMM-dd})");
                 }
             }
