@@ -44,8 +44,6 @@ namespace LuisBot.models
                 throw new Exception($"Type {typeString} not registered");
             }
 
-            var model = new T();
-
             var entity = result.Entities.FirstOrDefault(e => e.Type.Equals(typeString, StringComparison.OrdinalIgnoreCase));
 
             if (entity == null)
@@ -53,9 +51,11 @@ namespace LuisBot.models
                 return default(T);
             }
 
-            var skip = entity.Resolution.Values.Count - 1;
+            var model = new T();
+
             // if there are two entries for the resolution, the second one (future) will be the one we want
-            var props = (entity.Resolution.Values.Skip(skip).First() as IList<object>)?.First() as Dictionary<string, object>;
+            var props = (entity.Resolution.Values.First() as IList<object>)?.First() as
+                Dictionary<string, object>;
 
             if (props == null)
                 return default(T);

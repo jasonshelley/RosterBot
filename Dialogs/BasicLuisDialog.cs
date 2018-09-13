@@ -115,27 +115,37 @@ namespace Microsoft.Bot.Sample.LuisBot
             var date = await ModelFactory.CreateModel<Date>(context, result);
             var dateRange = await ModelFactory.CreateModel<DateRange>(context, result);
 
-            var complete = BuildCompleteList();
+            var query = result.Entities.FirstOrDefault(e => e.Type.Equals("Query", StringComparison.OrdinalIgnoreCase))?.Entity;
 
-            if (date != null)
+            if (query == "who")
             {
-                if (complete.ContainsKey(date.Value))
+                var complete = BuildCompleteList();
+
+                if (date != null)
                 {
-                    await context.PostAsync($"{complete[date.Value]} will be doing it that day.");
+                    if (complete.ContainsKey(date.Value))
+                    {
+                        await context.PostAsync($"{complete[date.Value]} will be doing it that day.");
+                    }
+                    else
+                    {
+                        await context.PostAsync(
+                            $"I'm sorry I haven't found anyone rostered on for that day ({date.Value})");
+                    }
                 }
-                else
+                else if (dateRange != null)
                 {
-                    await context.PostAsync($"I'm sorry I haven't found anyone rostered on for that day ({date.Value})");
+                    var victims = complete.Where(c => c.Key >= dateRange.Start && c.Key < dateRange.End);
+                    var bob = new StringBuilder();
+                    bob.AppendLine($"Here are your volunteers for that time: ");
+                    victims.ForEach(v => bob.AppendLine($"{v.Key: yyyy-MMM-dd}: {v.Value}"));
+
+                    await context.PostAsync(bob.ToString());
                 }
             }
-            else if (dateRange != null)
+            else if (query == "when")
             {
-                var victims = complete.Where(c => c.Key >= dateRange.Start && c.Key < dateRange.End);
-                var bob = new StringBuilder();
-                bob.AppendLine($"Here are your volunteers for that time: ");
-                victims.ForEach(v => bob.AppendLine($"{v.Key: yyyy-MMM-dd}: {v.Value}"));
 
-                await context.PostAsync(bob.ToString());
             }
         }
 
