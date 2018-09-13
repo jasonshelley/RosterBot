@@ -58,8 +58,6 @@ namespace LuisBot.models
                 var model = new T();
 
                 // if there are two entries for the resolution, the second one (future) will be the one we want
-                var reslist = res as IList<object>;
-                foreach (var instances in reslist) { 
                 var props = (res as IList<object>)?.First() as
                     Dictionary<string, object>;
 
