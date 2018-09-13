@@ -17,7 +17,7 @@ namespace LuisBot.models
 
         static ModelFactory()
         {
-            RegisterTypes();
+//            RegisterTypes();
         }
 
         public static void RegisterTypes()
@@ -31,7 +31,7 @@ namespace LuisBot.models
 
         public static T CreateModel<T>(LuisResult result) where T : new()
         {
-            var typeString = typeof(T).FullName;
+            var typeString = typeof(T).FullName.ToLower();
 
             var type = _types.ContainsKey(typeString) ? _types[typeString] : null;
 
@@ -48,7 +48,7 @@ namespace LuisBot.models
 
             var skip = entity.Resolution.Values.Count -1;
             // if there are two entries for the resolution, the second one (future) will be the one we want
-            var props = (entity.Resolution.Values.Skip(skip).First() as IList<Dictionary<string, object>>)?.First();
+            var props = (entity.Resolution.Values.Skip(skip).First() as IList<object>)?.First() as Dictionary<string, object>;
 
             if (props == null)
                 return default(T);
@@ -63,7 +63,13 @@ namespace LuisBot.models
             {
                 if (props.ContainsKey(prop.Name.ToLower()))
                 {
-                    prop.SetValue(model, props[prop.Name.ToLower()]);
+                    if (prop.PropertyType == typeof(DateTime))
+                    {
+                        var date = DateTime.Parse(props[prop.Name.ToLower()].ToString());
+                        prop.SetValue(model, date);
+                    }
+                    else
+                        prop.SetValue(model, props[prop.Name.ToLower()]);
                 }
             }
 
