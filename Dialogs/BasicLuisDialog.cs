@@ -85,7 +85,7 @@ namespace Microsoft.Bot.Sample.LuisBot
             { "matty", "Matt" },
             { "matthew", "Matt" },
             { "mick", "Michael" },
-            { "William", "Will" },
+            { "william", "Will" },
         };
 
         public BasicLuisDialog() : base(new LuisService(new LuisModelAttribute(
@@ -128,7 +128,10 @@ namespace Microsoft.Bot.Sample.LuisBot
         {
             var complete = BuildCompleteList();
 
-            var subject = GetEntityValue(result, "Subject");
+            var subject = GetEntityValue(result, "Subject").ToLower();
+            if (_nickNames.ContainsKey(subject))
+                subject = _nickNames[subject];
+
             var timeDirection = GetEntityValue(result, "TimeDirection");
 
             var now = DateTime.Now;
