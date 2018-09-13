@@ -123,9 +123,21 @@ namespace Microsoft.Bot.Sample.LuisBot
             await this.ShowLuisResult(context, result);
         }
 
+        [LuisIntent("Roster.Swap")]
+        public async Task RosterSwapQuery(IDialogContext context, LuisResult result)
+        {
+            if (result.TopScoringIntent.Score < 0.75)
+                return;
+
+            await context.PostAsync("No");
+        }
+
         [LuisIntent("Roster.When")]
         public async Task RosterWhenQuery(IDialogContext context, LuisResult result)
         {
+            if (result.TopScoringIntent.Score < 0.75)
+                return;
+
             var complete = BuildCompleteList();
 
             var subject = GetEntityValue(result, "Subject").ToLower();
@@ -165,6 +177,9 @@ namespace Microsoft.Bot.Sample.LuisBot
         [LuisIntent("Roster.WhosUp")]
         public async Task WhosUpIntent(IDialogContext context, LuisResult result)
         {
+            if (result.TopScoringIntent.Score < 0.75)
+                return;
+
             var date = await ModelFactory.CreateModel<Date>(context, result);
             var dateRange = await ModelFactory.CreateModel<DateRange>(context, result);
 
