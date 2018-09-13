@@ -79,11 +79,6 @@ namespace Microsoft.Bot.Sample.LuisBot
             ConfigurationManager.AppSettings["LuisAPIKey"], 
             domain: ConfigurationManager.AppSettings["LuisAPIHostName"])))
         {
-            var roster = new Dictionary<DateTime, string>();
-            var value = DateTime.Now;
-            var oneweek = TimeSpan.FromDays(7);
-            var ff = roster.Keys.Select(k => new { start = k, end = k + oneweek }).First(k => k.start <= value && k.end > value);
-
         }
 
 
@@ -113,36 +108,32 @@ namespace Microsoft.Bot.Sample.LuisBot
         {
             await this.ShowLuisResult(context, result);
         }
-        
+
         [LuisIntent("Roster.WhosUp")]
         public async Task WhosUpIntent(IDialogContext context, LuisResult result)
         {
-            await context.PostAsync($"Creating model of type: {result.TopScoringIntent}");
-            var date = ModelFactory.CreateModel<Date>(result);
-            await context.PostAsync($"Got date: {date}");
-            var dateRange = ModelFactory.CreateModel<DateRange>(result);
-            await context.PostAsync($"Got date range: {dateRange}");
+            var date = await ModelFactory.CreateModel<Date>(context, result);
+            var dateRange = await ModelFactory.CreateModel<DateRange>(context, result);
 
             var complete = BuildCompleteList();
-            await context.PostAsync($"Built complete list {complete.Count}");
 
             if (date != null)
             {
-                await context.PostAsync($"Handling date");
-
                 if (complete.ContainsKey(date.Value))
                 {
                     await context.PostAsync($"{complete[date.Value]} will be doing it that day.");
                 }
+                else
+                {
+                    await context.PostAsync($"I'm sorry I haven't found anyone rostered on for that day ({date.Value})");
+                }
             }
             else if (dateRange != null)
             {
-                await context.PostAsync($"Handling range");
-
                 var victims = complete.Where(c => c.Key >= dateRange.Start && c.Key < dateRange.End);
                 var bob = new StringBuilder();
-                bob.AppendLine($"Here are you're volunteers for that time: ");
-                victims.ForEach(v => bob.AppendLine($"{v.Key}: {v.Value}"));
+                bob.AppendLine($"Here are your volunteers for that time: ");
+                victims.ForEach(v => bob.AppendLine($"{v.Key: yyyy-MMM-dd}: {v.Value}"));
 
                 await context.PostAsync(bob.ToString());
             }
@@ -168,18 +159,6 @@ namespace Microsoft.Bot.Sample.LuisBot
             await context.PostAsync($"You have reached {intent.Intent}. You said: {result.Query}");
             foreach (var entity in result.Entities) {
                 await context.PostAsync($"{entity.Entity}: {entity.Type}");
-            }
-            
-            var dateRange = result.Entities.FirstOrDefault(e => e.Type == "builtin.datetimeV2.daterange");
-            if (dateRange != null)
-            {
-
-                dynamic range = dateRange.Resolution.Values.First() as List<object>;
-
-                var min = range.Start;
-                var max = range.End;
-
-                await context.PostAsync($"{min} -> {max}");
             }
             
             context.Wait(MessageReceived);
