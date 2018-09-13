@@ -33,8 +33,6 @@ namespace Microsoft.Bot.Sample.LuisBot
             {   new DateTime(   2018    ,   12  ,   3   )   ,   "Scott"   }   ,
             {   new DateTime(   2018    ,   12  ,   10  )   ,   "PK"  }   ,
             {   new DateTime(   2018    ,   12  ,   17  )   ,   "Ben R"   }   ,
-            {   new DateTime(   2018    ,   12  ,   24  )   ,   "0"   }   ,
-            {   new DateTime(   2018    ,   12  ,   31  )   ,   "0"   }   ,
             {   new DateTime(   2019    ,   1   ,   7   )   ,   "Gaz" }   ,
             {   new DateTime(   2019    ,   1   ,   14  )   ,   "Matt"    }   ,
             {   new DateTime(   2019    ,   1   ,   21  )   ,   "Michael" }   ,
@@ -179,7 +177,7 @@ namespace Microsoft.Bot.Sample.LuisBot
                 else
                 {
                     if (date.Value.DayOfWeek == DayOfWeek.Saturday || date.Value.DayOfWeek == DayOfWeek.Sunday)
-                        await context.PostAsync($"That's a weekend. There's no-one on.");
+                        await context.PostAsync($"That's a weekend.");
                     else
                         await context.PostAsync(
                         $"I'm sorry I haven't found anyone rostered on for that day ({date.Value: dddd yyyy-MMM-dd})");
