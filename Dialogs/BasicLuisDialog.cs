@@ -83,6 +83,8 @@ namespace Microsoft.Bot.Sample.LuisBot
             { "matty", "Matt" },
             { "matthew", "Matt" },
             { "mick", "Michael" },
+            { "paul", "PK" },
+            { "mr kerry", "PK" },
             { "william", "Will" },
         };
 
