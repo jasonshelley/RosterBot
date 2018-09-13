@@ -187,7 +187,7 @@ namespace Microsoft.Bot.Sample.LuisBot
                 var victims = complete.Where(c => c.Key >= dateRange.Start && c.Key < dateRange.End);
                 var bob = new StringBuilder();
                 bob.AppendLine($"Here are your volunteers for that time: ");
-                victims.ForEach(v => bob.AppendLine($"{v.Key: : dddd yyyy-MMM-dd}: {v.Value}"));
+                victims.ForEach(v => bob.AppendLine($"{v.Key: dddd MMM-dd}: {v.Value}"));
 
                 await context.PostAsync(bob.ToString());
             }
