@@ -73,6 +73,20 @@ namespace Microsoft.Bot.Sample.LuisBot
             {   new DateTime(   2019    ,   9   ,   9   )   ,   "Hazz"    }
         };
 
+        public Dictionary<string, string> _nickNames = new Dictionary<string, string>()
+        {
+            { "douglas", "Doug" },
+            { "dougie", "Doug" },
+            { "gary", "Gaz" },
+            { "gazza", "Gaz" },
+            { "harry", "Hazz" },
+            { "hazza", "Hazz" },
+            { "jason", "Jase" },
+            { "matty", "Matt" },
+            { "matthew", "Matt" },
+            { "mick", "Michael" },
+            { "William", "Will" },
+        };
 
         public BasicLuisDialog() : base(new LuisService(new LuisModelAttribute(
             ConfigurationManager.AppSettings["LuisAppId"], 
@@ -109,45 +123,75 @@ namespace Microsoft.Bot.Sample.LuisBot
             await this.ShowLuisResult(context, result);
         }
 
+        [LuisIntent("Roster.When")]
+        public async Task RosterWhenQuery(IDialogContext context, LuisResult result)
+        {
+            var complete = BuildCompleteList();
+
+            var subject = GetEntityValue(result, "Subject");
+            var timeDirection = GetEntityValue(result, "TimeDirection");
+
+            var now = DateTime.Now;
+
+            if (timeDirection == null || timeDirection.Equals("next"))
+            {
+                var next = complete.FirstOrDefault(k =>
+                    k.Key > now && k.Value.ToLower().Equals(subject, StringComparison.OrdinalIgnoreCase));
+                if (next.Value == null)
+                    await context.PostAsync($"{subject} doesn't appear to on the roster after {now}");
+                else
+                {
+                    await context.PostAsync($"{next.Value} is up next on {next.Key: dddd MMM dd}");
+                }
+            }
+            else if (timeDirection.Equals("last", StringComparison.OrdinalIgnoreCase))
+            {
+                var prev = complete.OrderByDescending(k => k.Key).FirstOrDefault(k => k.Key < now);
+
+                if (prev.Value == null)
+                    await context.PostAsync($"{subject} doesn't appear to be on the roster previously");
+                else
+                {
+                    await context.PostAsync($"{prev.Value} did it last on {prev.Key: dddd MMM dd}");
+                }
+
+            }
+        }
+
+
         [LuisIntent("Roster.WhosUp")]
         public async Task WhosUpIntent(IDialogContext context, LuisResult result)
         {
             var date = await ModelFactory.CreateModel<Date>(context, result);
             var dateRange = await ModelFactory.CreateModel<DateRange>(context, result);
 
-            var query = result.Entities.FirstOrDefault(e => e.Type.Equals("Query", StringComparison.OrdinalIgnoreCase))?.Entity;
+            var complete = BuildCompleteList();
 
-            if (query == "who")
+            if (date != null)
             {
-                var complete = BuildCompleteList();
-
-                if (date != null)
+                if (complete.ContainsKey(date.Value))
                 {
-                    if (complete.ContainsKey(date.Value))
-                    {
-                        await context.PostAsync($"{complete[date.Value]} will be doing it that day.");
-                    }
-                    else
-                    {
-                        await context.PostAsync(
-                            $"I'm sorry I haven't found anyone rostered on for that day ({date.Value})");
-                    }
+                    await context.PostAsync($"{complete[date.Value]} will be doing it that day.");
                 }
-                else if (dateRange != null)
+                else
                 {
-                    var victims = complete.Where(c => c.Key >= dateRange.Start && c.Key < dateRange.End);
-                    var bob = new StringBuilder();
-                    bob.AppendLine($"Here are your volunteers for that time: ");
-                    victims.ForEach(v => bob.AppendLine($"{v.Key: yyyy-MMM-dd}: {v.Value}"));
-
-                    await context.PostAsync(bob.ToString());
+                    await context.PostAsync(
+                        $"I'm sorry I haven't found anyone rostered on for that day ({date.Value: dddd yyyy-MMM-dd})");
                 }
             }
-            else if (query == "when")
+            else if (dateRange != null)
             {
+                var victims = complete.Where(c => c.Key >= dateRange.Start && c.Key < dateRange.End);
+                var bob = new StringBuilder();
+                bob.AppendLine($"Here are your volunteers for that time: ");
+                victims.ForEach(v => bob.AppendLine($"{v.Key: : dddd yyyy-MMM-dd}: {v.Value}"));
 
+                await context.PostAsync(bob.ToString());
             }
         }
+
+        private string GetEntityValue(LuisResult result, string name) =>
+            result.Entities.FirstOrDefault(e => e.Type.Equals(name, StringComparison.OrdinalIgnoreCase))?.Entity;
 
         private Dictionary<DateTime, string> BuildCompleteList()
         {

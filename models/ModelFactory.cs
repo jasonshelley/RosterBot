@@ -58,6 +58,8 @@ namespace LuisBot.models
                 var model = new T();
 
                 // if there are two entries for the resolution, the second one (future) will be the one we want
+                var reslist = res as IList<object>;
+                foreach (var instances in reslist) { 
                 var props = (res as IList<object>)?.First() as
                     Dictionary<string, object>;
 
@@ -65,8 +67,6 @@ namespace LuisBot.models
                     return default(T);
 
                 var properties = type.GetProperties();
-
-                var typeName = type.FullName;
 
                 foreach (var prop in properties)
                 {
@@ -90,11 +90,11 @@ namespace LuisBot.models
                createdModel = models[0];
             else
             {
-                if (models.GetType() == typeof(Date))
+                if (type == typeof(Date))
                 {
                     createdModel = models.Cast<Date>().OrderByDescending(d => d.Value).First() as T;
                 }
-                else if (models.GetType() == typeof(DateRange))
+                else if (type == typeof(DateRange))
                 {
                     createdModel = models.Cast<DateRange>().OrderByDescending(d => d.Start).First() as T;
                 }
