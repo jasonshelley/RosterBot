@@ -117,6 +117,7 @@ namespace Microsoft.Bot.Sample.LuisBot
         [LuisIntent("Roster.WhosUp")]
         public async Task WhosUpIntent(IDialogContext context, LuisResult result)
         {
+            await context.PostAsync($"Creating model of type: {result.TopScoringIntent}");
             var date = ModelFactory.CreateModel<Date>(result);
             await context.PostAsync($"Got date: {date}");
             var dateRange = ModelFactory.CreateModel<DateRange>(result);
