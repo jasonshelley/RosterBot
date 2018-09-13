@@ -31,7 +31,7 @@ namespace LuisBot.models
 
         private static void RegisterType(Type t) => _types.Add(t.FullName.ToLower(), t);
 
-        public static async Task<T> CreateModel<T>(IDialogContext context, LuisResult result) where T : new()
+        public static async Task<T> CreateModel<T>(IDialogContext context, LuisResult result) where T : class, new()
         {
             var typeString = typeof(T).FullName.ToLower();
 
@@ -51,34 +51,57 @@ namespace LuisBot.models
                 return default(T);
             }
 
-            var model = new T();
+            var models = new List<T>();
 
-            // if there are two entries for the resolution, the second one (future) will be the one we want
-            var props = (entity.Resolution.Values.First() as IList<object>)?.First() as
-                Dictionary<string, object>;
-
-            if (props == null)
-                return default(T);
-
-            var properties = type.GetProperties();
-
-            var typeName = type.FullName;
-
-            foreach (var prop in properties)
+            foreach (var res in entity.Resolution.Values)
             {
-                if (props.ContainsKey(prop.Name.ToLower()))
+                var model = new T();
+
+                // if there are two entries for the resolution, the second one (future) will be the one we want
+                var props = (entity.Resolution.Values.First() as IList<object>)?.First() as
+                    Dictionary<string, object>;
+
+                if (props == null)
+                    return default(T);
+
+                var properties = type.GetProperties();
+
+                var typeName = type.FullName;
+
+                foreach (var prop in properties)
                 {
-                    if (prop.PropertyType == typeof(DateTime))
+                    if (props.ContainsKey(prop.Name.ToLower()))
                     {
-                        var date = DateTime.Parse(props[prop.Name.ToLower()].ToString());
-                        prop.SetValue(model, date);
+                        if (prop.PropertyType == typeof(DateTime))
+                        {
+                            var date = DateTime.Parse(props[prop.Name.ToLower()].ToString());
+                            prop.SetValue(model, date);
+                        }
+                        else
+                            prop.SetValue(model, props[prop.Name.ToLower()]);
                     }
-                    else
-                        prop.SetValue(model, props[prop.Name.ToLower()]);
+                }
+                models.Add(model);
+            }
+
+            var createdModel = null as T;
+
+            if (models.Count == 1)
+               createdModel = models[0];
+            else
+            {
+                if (models.GetType() == typeof(Date))
+                {
+                    createdModel = models.Cast<Date>().OrderByDescending(d => d.Value).First() as T;
+                }
+                else if (models.GetType() == typeof(DateRange))
+                {
+                    createdModel = models.Cast<DateRange>().OrderByDescending(d => d.Start).First() as T;
                 }
             }
 
-            return model;
+
+            return createdModel;
         }
     }
 }
